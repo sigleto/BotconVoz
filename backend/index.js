@@ -20,10 +20,8 @@ app.use('/api/dialogflow/', dialogflowRoutes);
 
 
 
-// Configuración del puerto
-const PORT = 5000;
+const PORT = process.env.PORT || 5000;
 
-// Inicia el servidor
-app.listen(PORT, '192.168.0.196', () =>{
-    console.log(`Servidor corriendo en http://192.168.0.196:${PORT}`);
+app.listen(PORT, () => {
+    console.log(`Servidor corriendo en el puerto ${PORT}`);
 });
