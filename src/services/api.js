@@ -2,7 +2,7 @@
 import axios from 'axios';
 
 // Cambia localhost por la IP de tu servidor backend
-const API_URL = 'https://botcon-voz.vercel.app/api/dialogflow/';
+const API_URL = 'https://botconvoz.onrender.com/api/dialogflow/';
 
 
 export const detectIntent = async (sessionId, query) => {    
