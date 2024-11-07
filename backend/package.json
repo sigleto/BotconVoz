@@ -15,9 +15,11 @@
     "@google-cloud/dialogflow-cx": "^4.8.0",
     "@google-cloud/text-to-speech": "^5.5.0",
     "@grpc/grpc-js": "^1.12.2",
+    "base64-js": "^1.5.1",
     "cors": "^2.8.5",
     "dialogflow": "^1.2.0",
     "dotenv": "^16.4.5",
-    "express": "^4.21.1"
+    "express": "^4.21.1",
+    "expo-file-system": "~17.0.1"
   }
 }

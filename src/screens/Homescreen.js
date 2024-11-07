@@ -1,72 +1,83 @@
-import React, { useEffect, useState } from 'react';
+//src/screens/Homescreen.js
+import React, { useState, useEffect } from 'react';
 import { View, TextInput, TouchableOpacity, Text, StyleSheet, Alert } from 'react-native';
-import { Audio } from 'expo-av'; // Asegúrate de que estás importando Audio de expo-av
-import { detectIntent, synthesizeSpeech } from '../services/api'; // Importa correctamente
+import { Audio } from 'expo-av';
+import * as FileSystem from 'expo-file-system';
+import { detectIntent, synthesizeSpeech } from '../services/api';
 
 
 const HomeScreen = () => {
     const [query, setQuery] = useState('');
     const [response, setResponse] = useState('');
-    const [sound, setSound] = useState(); // Estado para el sonido
+    const [isLoading, setIsLoading] = useState(false);
 
-    
-    // Función para solicitar permisos
-    const requestPermissions = async () => {
-        console.log("Solicitando permisos de micrófono...");
-        const { status } = await Audio.requestPermissionsAsync();
-        if (status !== 'granted') {
-            Alert.alert('Permission not granted', 'Please allow microphone access to use this feature.');
-        }
-    };
 
     useEffect(() => {
-        requestPermissions(); // Llama a la función para solicitar permisos al montar el componente
+        // Solicitar permisos de audio al cargar el componente
+        (async () => {
+            await Audio.requestPermissionsAsync();
+        })();
     }, []);
 
+
+    const playAudio = async (audioContent) => {
+        const { sound } = await Audio.Sound.createAsync({
+            uri: `data:audio/mp3;base64,${audioContent}`,
+        });
+        await sound.playAsync();
+    };
+  
     const handleSubmit = async () => {
+        if (!query.trim()) {
+            Alert.alert('Error', 'Por favor, ingresa una pregunta');
+            return;
+        }
+        setIsLoading(true);
         try {
             const result = await detectIntent('unique-session-id', query);
             console.log('Respuesta de detectIntent:', JSON.stringify(result, null, 2));
             setResponse(result.response);
 
-            // Llamar a la síntesis de voz después de obtener la respuesta
             if (result.response) {
-                const audioResult = await synthesizeSpeech(result.response);
-                console.log('Respuesta de synthesizeSpeech:', audioResult);
-                
-                // Reproducir el audio usando el contenido en base64
-                if (audioResult.audioContent) {
-                    const { sound: playbackObject } = await Audio.Sound.createAsync(
-                        { uri: `data:audio/mpeg;base64,${audioResult.audioContent}` }
-                    );
-                    setSound(playbackObject);
-                    await playbackObject.playAsync(); // Reproduce el audio
-                }
+                const audioBuffer = await synthesizeSpeech(result.response);
+                console.log('Audio Buffer recibido completo:', JSON.stringify(audioBuffer));  // Agrega este log
+                await playAudio(audioBuffer);
             }
         } catch (error) {
             console.error('Error en la detección de intentos:', error);
             Alert.alert('Error', 'No se pudo procesar la solicitud');
+        } finally {
+            setIsLoading(false);
         }
     };
-
     return (
         <View style={styles.container}>
             <Text style={styles.title}>Chatbot</Text>
-            <TextInput 
+            <TextInput
                 style={styles.input}
                 placeholder="Escribe tu pregunta"
                 placeholderTextColor="#aaa"
                 value={query}
                 onChangeText={setQuery}
             />
-            <TouchableOpacity style={styles.button} onPress={handleSubmit}>
-                <Text style={styles.buttonText}>Enviar</Text>
+            <TouchableOpacity 
+                style={[styles.button, isLoading && styles.buttonDisabled]}
+                onPress={handleSubmit}
+                disabled={isLoading}
+            >
+                <Text style={styles.buttonText}>
+                    {isLoading ? 'Procesando...' : 'Enviar'}
+                </Text>
             </TouchableOpacity>
-            <Text style={styles.responseText}>{response}</Text>
+           {response ? (
+                <View style={styles.responseContainer}>
+                    <Text style={styles.responseTitle}>Respuesta:</Text>
+                    <Text style={styles.responseText}>{response}</Text>
+                </View>
+            ) : null}
         </View>
     );
 };
-
 const styles = StyleSheet.create({
     container: {
         flex: 1,
@@ -99,5 +110,7 @@ const styles = StyleSheet.create({
         fontSize: 16,
     },
 });
+
+
 
 export default HomeScreen;

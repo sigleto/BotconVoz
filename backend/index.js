@@ -3,6 +3,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
+const path = require('path');
 
 
 // Configuración de las credenciales desde .env
@@ -20,7 +21,7 @@ const credentials = {
     client_x509_cert_url: process.env.CLIENT_X509_CERT_URL,
     universe_domain: process.env.UNIVERSE_DOMAIN,
   };
-console.log(credentials)
+
 
 // Inicializa la aplicación de Express
 const app = express();
@@ -30,6 +31,9 @@ app.use(cors());
 
 // Middleware para parsear el cuerpo de las solicitudes
 app.use(bodyParser.json());
+
+app.use(express.static(path.join(__dirname)));
+
 
 // Importa las rutas y pasa credentials
 const dialogflowRoutes = require('./src/routes/dialogflow')(credentials);
